@@ -4,6 +4,16 @@ import json
 from urlparse import urlparse
 import os
 import sys
+import xextract
+
+
+def getDepends(url):
+    r = requests.get(os.path.join(url, "relations/dependencies"))
+    eles = xextract.Element(xpath='//*[contains(@class,"project-listing")]//*[contains(@class, "name-wrapper")]/a').parse(r.text)
+    #print [repr(x.items()) for x in eles]
+
+    print repr([(x.itertext().next(),x.get("href")) for x in eles])
+
 
 
 def process_zip(z):
@@ -16,29 +26,19 @@ def process_zip(z):
 		vers_str = mc_version + "-" + forge_version[6:]
 		pack_name = manifest["name"]
 
-		requests.get("http://files.minecraftforge.net/maven/net/minecraftforge/forge/" + vers_str + "/forge-" + vers_str1 + "-universal.jar")
+		requests.get("http://files.minecraftforge.net/maven/net/minecraftforge/forge/" + vers_str + "/forge-" + vers_str + "-universal.jar")
 		
 		profiles = None
-		with open("~/.minecraft/launcher_profiles.json") as f:
-			profiles = json.loads(f.read())
-		
-
-		if pack_name in profiles["profiles"]:
-			print "there's already a profile for this pack"
-
-		profiles["profiles"][pack_name] = {"name":pack_name,"lastVersionId":mc_version}
-
-		os.mkdir("~/.minecraft/versions/" + pack_name)
-
-		os.mkdir("~/.minecraft/versions/" + pack_name + "/mods")
 		
 		for f in manifest["files"]:
 			r = requests.get("http://minecraft.curseforge.com/projects/" + str(f["projectID"]))
-			r2 = requests.get(os.path.join(r.url, "files", str(f["fileID"]), "download"))
-			u = urlparse(r2.url)
-			fname = "~/.minecrat/versions/" + pack_name + "/mods/" + os.path.basename(u.path)
-			with open(fname, "w") as ff:
-				ff.write(r2.content)
+                        print r.url
+                        getDepends(r.url)
+			#r2 = requests.get(os.path.join(r.url, "files", str(f["fileID"]), "download"))
+			#u = urlparse(r2.url)
+			#fname = "~/.minecrat/versions/" + pack_name + "/mods/" + os.path.basename(u.path)
+			#with open(fname, "w") as ff:
+			#	ff.write(r2.content)
 
 
 
